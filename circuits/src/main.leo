@@ -1,74 +1,45 @@
-// The 'hello' program.
 program zkmemorygame.aleo {
 
     record Solution {
-        owner: address,
-        cards: Board
+        public owner: address,
+        public solHashes: [field; 2]
     }
 
-    record PartialSolution {
-        owner: address,
-        cards: Board
-    }
-
-    struct Board {
+    struct Pair {
         c1: u8,
-        c2: u8,
-        c3: u8,
-        c4: u8
+        c2: u8
     }
 
-    function getSolutionCard(sol: Solution, card: u8) -> u8 {
-        if (card == 1_u8) {
-            return sol.cards.c1;
-        } else if (card == 2_u8) {
-            return sol.cards.c2;
-        } else if (card == 3_u8) {
-            return sol.cards.c3;
-        } else if (card == 4_u8) {
-            return sol.cards.c4;
-        }
-        return 0_u8; // shouldn't happen
-    }
-    
-    function getFilledBoard(sol: Solution, card1: u8, card2: u8) -> Board {
-        let newBoard : Board = Board {
-            c1: card1 == 1_u8 || card2 == 1_u8 ? sol.cards.c1 : 0_u8,
-            c2: card1 == 2_u8 || card2 == 2_u8 ? sol.cards.c2 : 0_u8,
-            c3: card1 == 3_u8 || card2 == 3_u8 ? sol.cards.c3 : 0_u8,
-            c4: card1 == 4_u8 || card2 == 4_u8 ? sol.cards.c4 : 0_u8
+    transition guess(hashes: [field; 2], public a: u8, public b: u8) -> bool {
+        let pair: Pair = Pair {
+            c1: a,
+            c2: b
         };
-        return newBoard;
-    }
+        let suggestedSol: field = Poseidon4::hash_to_field(pair);
 
-    transition guess(sol: Solution, history: PartialSolution, public a: u8, public b: u8) -> PartialSolution {
-        let solA : u8 = getSolutionCard(sol, a);
-        let solB : u8 = getSolutionCard(sol, b);
+        let solA : field = hashes[0_u8];
+        let solB : field = hashes[1_u8];
 
-        if (solA != solB) {
-            return history;
+        if (suggestedSol == solA || suggestedSol == solB) {
+            return true;
         }
-        else {
-            let newBoard : Board = getFilledBoard(sol, a, b);
-
-            let newpartial : PartialSolution = PartialSolution {
-                owner: self.caller,
-                cards: newBoard
-            };
-
-            return newpartial;
-        }        
+        return false;
     }
 
     transition new() -> Solution {
+        let pair1: Pair = Pair {
+            c1: 1_u8,
+            c2: 3_u8
+        };
+        let pair2: Pair = Pair {
+            c1: 2_u8,
+            c2: 4_u8
+        };
+        let sol1: field = Poseidon4::hash_to_field(pair1);
+        let sol2: field = Poseidon4::hash_to_field(pair2);
         return Solution {
             owner: self.caller,
-            cards: Board {
-                c1: 1_u8,
-                c2: 2_u8,
-                c3: 1_u8,
-                c4: 2_u8
-                }
+            solHashes: [sol1, sol2]
         };
     }
 }
