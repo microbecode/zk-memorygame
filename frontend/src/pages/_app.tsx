@@ -6,7 +6,6 @@ import { Hydrate, QueryClient, QueryClientProvider } from 'react-query';
 import { ReactQueryDevtools } from 'react-query/devtools';
 import { ThemeProvider } from 'next-themes';
 import ModalsContainer from '@/components/modal-views/container';
-import DrawersContainer from '@/components/drawer-views/container';
 import SettingsButton from '@/components/settings/settings-button';
 import SettingsDrawer from '@/components/settings/settings-drawer';
 // base css file
@@ -59,7 +58,6 @@ function CustomApp({ Component, pageProps }: AppPropsWithLayout) {
               >
                 {getLayout(<Component {...pageProps} />)}
                 <ModalsContainer />
-                <DrawersContainer />
               </ThemeProvider>
             </WalletModalProvider>
           </WalletProvider>

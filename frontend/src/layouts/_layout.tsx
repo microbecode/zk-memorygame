@@ -3,7 +3,6 @@ import Logo from '@/components/ui/logo';
 import SearchButton from '@/components/search/button';
 import { useBreakpoint } from '@/lib/hooks/use-breakpoint';
 import { useIsMounted } from '@/lib/hooks/use-is-mounted';
-import { useDrawer } from '@/components/drawer-views/context';
 import Hamburger from '@/components/ui/hamburger';
 import { MenuItems } from '@/layouts/_layout-menu';
 import React from 'react';
@@ -14,7 +13,6 @@ require('@demox-labs/aleo-wallet-adapter/dist/ui/styles.css');
 function HeaderRightArea() {
   const isMounted = useIsMounted();
   const breakpoint = useBreakpoint();
-  const { openDrawer, isOpen } = useDrawer();
   return (
     <div className="order-last flex shrink-0 items-center">
       <div className="ltr:mr-3.5 rtl:ml-3.5 ltr:sm:mr-5 rtl:sm:ml-5 xl:hidden">
@@ -32,15 +30,6 @@ function HeaderRightArea() {
         )}
         <WalletMultiButton className="bg-[#1253fa]" />
       </div>
-
-      <div className="lg:hidden">
-        <Hamburger
-          isOpen={isOpen}
-          onClick={() => openDrawer('DRAWER_MENU')}
-          color="white"
-          className="shadow-main dark:border dark:border-solid dark:border-gray-700 dark:bg-light-dark dark:text-white"
-        />
-      </div>
     </div>
   );
 }
@@ -49,7 +38,6 @@ export function Header() {
   const windowScroll = useWindowScroll();
   const breakpoint = useBreakpoint();
   const isMounted = useIsMounted();
-  const { openDrawer, isOpen } = useDrawer();
 
   return (
     <nav
@@ -59,22 +47,6 @@ export function Header() {
           : 'h-16 bg-body dark:bg-dark sm:h-24'
       }`}
     >
-      {/* <div className="w-80 2xl:w-[368px]"></div> */}
-      <div className="flex items-center">
-        <div className="hidden lg:mr-6 lg:block xl:hidden">
-          <Hamburger
-            isOpen={isOpen}
-            onClick={() => openDrawer('DRAWER_MENU')}
-            color="white"
-            className="shadow-main dark:border dark:border-solid dark:border-gray-700 dark:bg-light-dark dark:text-white"
-          />
-        </div>
-        <Logo />
-        {isMounted && ['xs', 'sm', 'md', 'lg'].indexOf(breakpoint) == -1 && (
-          <MenuItems />
-        )}
-      </div>
-
       <HeaderRightArea />
     </nav>
   );

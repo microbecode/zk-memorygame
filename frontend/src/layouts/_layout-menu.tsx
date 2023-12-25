@@ -7,7 +7,6 @@ import ActiveLink from '@/components/ui/links/active-link';
 import Scrollbar from '@/components/ui/scrollbar';
 import { ChevronForward } from '@/components/icons/chevron-forward';
 import { Close } from '@/components/icons/close';
-import { useDrawer } from '@/components/drawer-views/context';
 import { ChevronDown } from '@/components/icons/chevron-down';
 
 const MenuLinks = [
@@ -18,11 +17,7 @@ const MenuLinks = [
       { name: 'Minimal', href: '/minimal' },
     ],
   },
-  { name: 'Sign', href: '/sign' },
-  { name: 'Decrypt', href: '/decrypt' },
-  { name: 'Records', href: '/records' },
   { name: 'Execute', href: '/execute' },
-  { name: 'Deploy', href: '/deploy' },
 ];
 
 export function MenuItems() {
@@ -82,23 +77,11 @@ export function MenuItems() {
 }
 
 export default function DrawerMenu() {
-  const { closeDrawer } = useDrawer();
   return (
     <div className="relative w-full max-w-full bg-white dark:bg-dark xs:w-80">
       <div className="flex h-24 items-center justify-between overflow-hidden px-6 py-4">
         <Logo />
-        <div className="md:hidden">
-          <Button
-            title="Close"
-            color="white"
-            shape="circle"
-            variant="transparent"
-            size="small"
-            onClick={closeDrawer}
-          >
-            <Close className="h-auto w-2.5" />
-          </Button>
-        </div>
+        <div className="md:hidden"></div>
       </div>
 
       <Scrollbar style={{ height: 'calc(100% - 96px)' }}>

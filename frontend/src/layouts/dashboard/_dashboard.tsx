@@ -3,8 +3,6 @@ import cn from 'classnames';
 import { useWindowScroll } from '@/lib/hooks/use-window-scroll';
 import Hamburger from '@/components/ui/hamburger';
 import { useIsMounted } from '@/lib/hooks/use-is-mounted';
-import { useDrawer } from '@/components/drawer-views/context';
-import Sidebar from '@/layouts/dashboard/_sidebar';
 import React, { FC, useMemo } from 'react';
 import { WalletMultiButton } from '@demox-labs/aleo-wallet-adapter-reactui';
 
@@ -19,7 +17,6 @@ function HeaderRightArea() {
 }
 
 export function Header() {
-  const { openDrawer } = useDrawer();
   const isMounted = useIsMounted();
   let windowScroll = useWindowScroll();
   let [isOpen, setIsOpen] = useState(false);
@@ -34,14 +31,7 @@ export function Header() {
     >
       <div className="flex h-full items-center justify-between px-4 sm:px-6 lg:px-8 xl:px-10 3xl:px-12">
         <div className="flex items-center">
-          <div className="block ltr:mr-1 rtl:ml-1 ltr:sm:mr-3 rtl:sm:ml-3 xl:hidden">
-            <Hamburger
-              isOpen={isOpen}
-              onClick={() => openDrawer('DASHBOARD_SIDEBAR')}
-              variant="transparent"
-              className="dark:text-white"
-            />
-          </div>
+          <div className="block ltr:mr-1 rtl:ml-1 ltr:sm:mr-3 rtl:sm:ml-3 xl:hidden"></div>
         </div>
 
         <HeaderRightArea />
@@ -61,7 +51,6 @@ export default function Layout({
   return (
     <div className="ltr:xl:pl-72 rtl:xl:pr-72 ltr:2xl:pl-80 rtl:2xl:pr-80">
       <Header />
-      <Sidebar className="hidden xl:block" />
       <main
         className={cn(
           'min-h-[100vh] px-4 pt-24 pb-16 sm:px-6 sm:pb-20 lg:px-8 xl:px-10 xl:pb-24 3xl:px-12',
