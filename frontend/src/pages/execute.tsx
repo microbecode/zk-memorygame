@@ -23,10 +23,10 @@ function tryParseJSON(input: string): string | object {
 const Execute: NextPageWithLayout = () => {
   const { wallet, publicKey } = useWallet();
 
-  let [programId, setProgramId] = useState('');
-  let [functionName, setFunctionName] = useState('');
+  let [programId, setProgramId] = useState('zkmemorygame234.aleo');
+  let [functionName, setFunctionName] = useState('new');
   let [inputs, setInputs] = useState('');
-  let [fee, setFee] = useState<number | undefined>();
+  let [fee, setFee] = useState<number | undefined>(1);
   let [transactionId, setTransactionId] = useState<string | undefined>();
   let [status, setStatus] = useState<string | undefined>();
 
@@ -59,13 +59,16 @@ const Execute: NextPageWithLayout = () => {
       programId,
       functionName,
       parsedInputs,
-      fee!
+      fee!,
+      false
     );
+    console.log('tx created', aleoTransaction);
 
     const txId =
       (await (wallet?.adapter as LeoWalletAdapter).requestTransaction(
         aleoTransaction
       )) || '';
+    console.log('tx done', txId);
     setTransactionId(txId);
   };
 
