@@ -17,6 +17,7 @@ import { LeoWalletAdapter } from '@demox-labs/aleo-wallet-adapter-leo';
 import { DecryptPermission } from '@demox-labs/aleo-wallet-adapter-base';
 import { WalletProvider } from '@demox-labs/aleo-wallet-adapter-react';
 import { WalletModalProvider } from '@demox-labs/aleo-wallet-adapter-reactui';
+import './styles.css';
 
 type AppPropsWithLayout = AppProps & {
   Component: NextPageWithLayout;
@@ -47,7 +48,7 @@ function CustomApp({ Component, pageProps }: AppPropsWithLayout) {
         <Hydrate state={pageProps.dehydratedState}>
           <WalletProvider
             wallets={wallets}
-            decryptPermission={DecryptPermission.UponRequest}
+            decryptPermission={DecryptPermission.OnChainHistory}
             autoConnect
           >
             <WalletModalProvider>

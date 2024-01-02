@@ -13,14 +13,39 @@ import {
 } from '@demox-labs/aleo-wallet-adapter-base';
 
 const GettingStartedPage: NextPageWithLayout = () => {
-  const { wallet, publicKey } = useWallet();
+  const { wallet, publicKey, requestTransactionHistory } = useWallet();
 
-  let [programId, setProgramId] = useState('zkmemorygame234.aleo');
-  let [functionName, setFunctionName] = useState('new');
-  let [inputs, setInputs] = useState('');
-  let [fee, setFee] = useState<number | undefined>(1);
+  const programId = 'zkmemorygame234.aleo';
+  const functionName = 'new';
+  const fee = 2000;
+  const puzzleSize = 4;
+
   let [transactionId, setTransactionId] = useState<string | undefined>();
   let [status, setStatus] = useState<string | undefined>();
+  let [puzzle, setPuzzle] = useState<number[]>(
+    Array.from({ length: puzzleSize }, () => 0)
+  );
+  let [guess, setGuess] = useState<number[]>();
+
+  console.log('puzzle', puzzle);
+
+  const onGuess = (index: number) => {
+    console.log('guess', index);
+    if (guess && guess.length > 0) {
+      if (index == guess[0]) {
+        // undo guess
+        setGuess(new Array());
+      } else {
+        // finalize
+      }
+      return;
+    }
+    setGuess([index]);
+  };
+
+  useEffect(() => {
+    console.log('guess is now', guess?.join(' '));
+  }, [guess]);
 
   useEffect(() => {
     let intervalId: NodeJS.Timeout | undefined;
@@ -38,6 +63,22 @@ const GettingStartedPage: NextPageWithLayout = () => {
     };
   }, [transactionId]);
 
+  useEffect(() => {
+    const hmm = async () => {
+      console.log('new status', status);
+      /*   if (status == 'Finalized') {
+        const records = await (
+          wallet?.adapter as LeoWalletAdapter
+        ).requestRecords(transactionId!);
+        console.log('result', records);
+      } */
+      /* const a = await (
+        wallet?.adapter as LeoWalletAdapter
+      ). */
+    };
+    hmm();
+  }, [status, transactionId]);
+
   function tryParseJSON(input: string): string | object {
     try {
       return JSON.parse(input);
@@ -50,6 +91,7 @@ const GettingStartedPage: NextPageWithLayout = () => {
     event.preventDefault();
     if (!publicKey) throw new WalletNotConnectedError();
 
+    const inputs = '';
     const inputsArray = inputs.split('\n').filter((input) => input !== '');
     const parsedInputs = inputsArray.map((input) => tryParseJSON(input));
 
@@ -63,11 +105,25 @@ const GettingStartedPage: NextPageWithLayout = () => {
       false
     );
 
+    console.log('tx', aleoTransaction);
+
     const txId =
       (await (wallet?.adapter as LeoWalletAdapter).requestTransaction(
         aleoTransaction
       )) || '';
+
+    console.log('txId', txId);
     setTransactionId(txId);
+  };
+
+  const getHistory = async () => {
+    /*     const hist = await (
+      wallet?.adapter as LeoWalletAdapter
+    ).requestTransactionHistory(programId); */
+    if (requestTransactionHistory) {
+      const hist = await requestTransactionHistory(programId);
+      console.log('hist', hist);
+    }
   };
 
   const getTransactionStatus = async (txId: string) => {
@@ -84,6 +140,19 @@ const GettingStartedPage: NextPageWithLayout = () => {
         description="Execute function with Aleo Wallet"
       />
       <Base>
+        <div className="grid">
+          {puzzle.map((card, index) => (
+            <div
+              key={index}
+              className="card"
+              onClick={() => {
+                onGuess(index);
+              }}
+            >
+              {guess?.includes(index) ? <div>_</div> : ''}
+            </div>
+          ))}
+        </div>
         <div className="flex items-center justify-center">
           <Button
             disabled={
@@ -95,7 +164,7 @@ const GettingStartedPage: NextPageWithLayout = () => {
             {!publicKey ? 'Connect Your Wallet' : 'Submit'}
           </Button>
         </div>
-
+        <Button onClick={getHistory}>hist</Button>
         {transactionId && (
           <div>
             <div>{`Transaction status: ${status}`}</div>
