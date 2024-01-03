@@ -11,6 +11,10 @@ import {
   WalletAdapterNetwork,
   WalletNotConnectedError,
 } from '@demox-labs/aleo-wallet-adapter-base';
+//import { sha256 } from '@noble/hashes/sha256';
+//const createKeccakHash = require('keccak');
+//import { createKeccakHash } from 'keccak';
+const createKeccakHash = require('keccak');
 
 const GettingStartedPage: NextPageWithLayout = () => {
   const { wallet, publicKey, requestTransactionHistory } = useWallet();
@@ -26,6 +30,49 @@ const GettingStartedPage: NextPageWithLayout = () => {
     Array.from({ length: puzzleSize }, () => 0)
   );
   let [guess, setGuess] = useState<number[]>();
+
+  useEffect(() => {
+    let tries = [
+      '0x00000001',
+      '0x0000001',
+      '0x000001',
+      '0x00001',
+      '0x0001',
+      '0x001',
+      '0x01',
+      '0x1',
+      '00000001',
+      '0000001',
+      '000001',
+      '00001',
+      '0001',
+      '001',
+      '01',
+      '1',
+    ];
+    for (let i = 0; i < tries.length; i++) {
+      let hash = createKeccakHash('keccak256')
+        .update(tries[i])
+        ._resetState()
+        .digest('hex');
+      if (hash.indexOf('EBD7') >= 0) {
+        console.log('found!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', tries[i]);
+      }
+
+      /*
+  pitäisi saada joko:
+  5D5CD2E3DC2D44AC3C99E90E511C8D1FFF58102475FD599AFC2DC3E7874EBD7
+  1D5CD2E3DC2D44AC3C99E90E511C8D1FFF58102475FD599AFC2DC3E7874EBD7
+  */
+    }
+    console.log(
+      'nope',
+      createKeccakHash('keccak256').update('1')._resetState().digest('hex')
+    );
+    /*  console.log(
+      createKeccakHash('keccak256').update('1')._resetState().digest('hex')
+    ); */
+  }, []);
 
   console.log('puzzle', puzzle);
 

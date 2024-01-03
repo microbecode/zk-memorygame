@@ -33,6 +33,7 @@
     "https-browserify": "^1.0.0",
     "jotai": "1.7.2",
     "js-cookie": "3.0.1",
+    "keccak": "^3.0.4",
     "little-state-machine": "4.2.0",
     "lodash": "4.17.21",
     "next": "12.1.6",
