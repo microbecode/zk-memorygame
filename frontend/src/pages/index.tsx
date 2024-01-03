@@ -12,10 +12,11 @@ import {
   WalletNotConnectedError,
 } from '@demox-labs/aleo-wallet-adapter-base';
 
+export const programId = 'zkmemorygame234.aleo';
+
 const GettingStartedPage: NextPageWithLayout = () => {
   const { wallet, publicKey, requestTransactionHistory } = useWallet();
 
-  const programId = 'zkmemorygame234.aleo';
   const functionName = 'new';
   const fee = 2000;
   const puzzleSize = 4;
