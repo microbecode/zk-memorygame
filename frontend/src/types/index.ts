@@ -11,3 +11,9 @@ export interface Attachment {
   original: string;
   thumbnail: string;
 }
+
+export interface Solution {
+  owner: string;
+  solHashes: string[];
+  _nonce: string;
+}

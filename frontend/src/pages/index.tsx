@@ -1,4 +1,4 @@
-import type { NextPageWithLayout } from '@/types';
+import type { NextPageWithLayout, Solution } from '@/types';
 import { NextSeo } from 'next-seo';
 import DashboardLayout from '@/layouts/dashboard/_dashboard';
 import Button from '@/components/ui/button';
@@ -15,7 +15,12 @@ import {
 export const programId = 'zkmemorygame234.aleo';
 
 const GettingStartedPage: NextPageWithLayout = () => {
-  const { wallet, publicKey, requestTransactionHistory } = useWallet();
+  const {
+    wallet,
+    publicKey,
+    requestTransactionHistory,
+    requestRecordPlaintexts,
+  } = useWallet();
 
   const functionName = 'new';
   const fee = 2000;
@@ -27,6 +32,7 @@ const GettingStartedPage: NextPageWithLayout = () => {
     Array.from({ length: puzzleSize }, () => 0)
   );
   let [guess, setGuess] = useState<number[]>();
+  let [solution, setSolution] = useState<Solution>();
 
   console.log('puzzle', puzzle);
 
@@ -118,14 +124,72 @@ const GettingStartedPage: NextPageWithLayout = () => {
   };
 
   const getHistory = async () => {
-    /*     const hist = await (
-      wallet?.adapter as LeoWalletAdapter
-    ).requestTransactionHistory(programId); */
-    if (requestTransactionHistory) {
+    const adapter = wallet?.adapter as LeoWalletAdapter;
+    const hist = await adapter.requestTransactionHistory(programId);
+    console.log('hist', hist);
+    if (hist && hist.length > 0) {
+      let url = 'https://testnet3.aleorpc.com';
+      const tx = await getTransaction(url, hist[hist.length - 1].transactionId);
+      console.log('hist tx', tx);
+      if (tx?.execution?.transitions && tx?.execution?.transitions.length > 0) {
+        const outputs = tx.execution.transitions[0].outputs;
+        console.log('outputs', outputs);
+        if (outputs?.length > 0) {
+          const val = outputs[0].value;
+          console.log('val', val);
+          const decrypted = await adapter.decrypt(val);
+
+          /* This is the kind of data we get back from the adapter.
+          {
+            owner: aleo16xfyc9065arfx97cuh7kh0sh53s65lkcaz6j38zfd38amny5g59qvm2uyl.public,
+            solHashes: [
+              2797802722306951261185173939919875632932683148513324805941125501600765440890field.public,
+              2759852216709657892218420375572265609425999351118643956003570932661481028716field.public
+            ],
+            _nonce: 3277380945614208778721529438563305824578593868090123601887967444196930154088group.public
+          }
+          */
+          // Thanks AI for the parsing.
+
+          const r = /'([^']*)'|(\w+):|(\w+\.public)/g;
+          // A function to replace the matches with double quotes and quoted property names
+          const f = (_: any, p1: any, p2: any, p3: any) =>
+            p1 ? `"${p1}"` : p2 ? `"${p2}":` : `"${p3}"`;
+
+          setSolution(JSON.parse(decrypted.replace(r, f)) as Solution);
+        }
+      }
+    }
+    //const aaa = await (wallet?.adapter as LeoWalletAdapter).requestRecordPlaintexts
+    /*    if (requestRecordPlaintexts) {
+      const aaa = await requestRecordPlaintexts(programId);
+      console.log('aaa', aaa);
+    } */
+
+    /*  if (requestTransactionHistory) {
       const hist = await requestTransactionHistory(programId);
       console.log('hist', hist);
-    }
+    }*/
+    /*  if (transactionId) {
+      let url = 'https://testnet3.aleorpc.com';
+      const tx = await getTransaction(url, transactionId);
+      console.log('tx', tx);
+      console.log('outputp', tx.output);
+    } */
   };
+
+  async function getTransaction(
+    apiUrl: string,
+    transactionId: string
+  ): Promise<any> {
+    const transactionUrl = `${apiUrl}/aleo/transaction`;
+    const response = await fetch(`${transactionUrl}/${transactionId}`);
+    if (!response.ok) {
+      throw new Error('Transaction not found');
+    }
+    const transaction = await response.json();
+    return transaction;
+  }
 
   const getTransactionStatus = async (txId: string) => {
     const status = await (
