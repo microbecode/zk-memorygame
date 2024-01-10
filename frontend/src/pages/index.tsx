@@ -32,15 +32,7 @@ const GettingStartedPage: NextPageWithLayout = () => {
 
   let [guess, setGuess] = useState<number[]>();
   let [rightGuesses, setRightGuesses] = useState<number[]>();
-  let [solution, setSolution] =
-    useState<Solution>(/* {
-    owner: '',
-    _nonce: '',
-    solHashes: [
-      '2797802722306951261185173939919875632932683148513324805941125501600765440890field.public',
-      '2759852216709657892218420375572265609425999351118643956003570932661481028716field.public',
-    ],
-  } */);
+  let [solution, setSolution] = useState<Solution>();
   let [solTxProcessing, setSolTxProcessing] = useState<boolean>(false);
   let [solGuessProcessing, setGuessTxProcessing] = useState<boolean>(false);
   let [statusText, setStatusText] = useState<string>('');
@@ -51,7 +43,6 @@ const GettingStartedPage: NextPageWithLayout = () => {
     if (disabled) {
       return;
     }
-    console.log('guess', index);
     if (guess && guess.length > 0) {
       if (index == guess[0]) {
         // undo guess
@@ -60,17 +51,15 @@ const GettingStartedPage: NextPageWithLayout = () => {
         // finalize
 
         if (!solution) {
+          setStatusText('Retrieve cipher solution first');
           console.error('get solution first');
           return;
         }
 
         setGuess([index, guess[0]]);
-
         setGuessTxProcessing(true);
 
         if (!publicKey) throw new WalletNotConnectedError();
-
-        //  console.log('TIS IS', solution.solHashes[0], solution.solHashes[1]);
 
         const hashes = [
           solution.solHashes[0].replace('.public', ''),
@@ -79,13 +68,6 @@ const GettingStartedPage: NextPageWithLayout = () => {
         const aleoFormatted = JSON.stringify(hashes)
           .replaceAll("'", '')
           .replaceAll('"', '');
-
-        console.log('wront hshes', aleoFormatted);
-
-        const hashes5 =
-          '[2797802722306951261185173939919875632932683148513324805941125501600765440890field,2759852216709657892218420375572265609425999351118643956003570932661481028716field]';
-
-        // const parsedInputs: any[] = [hashes5, '1u8', '3u8'];
 
         let parsedInputs: any[] = [aleoFormatted];
 
@@ -113,7 +95,7 @@ const GettingStartedPage: NextPageWithLayout = () => {
             aleoTransaction
           )) || '';
 
-        console.log('guess txId', txId);
+        // console.log('guess txId', txId);
         setTransactionId(txId);
       }
       return;
@@ -207,6 +189,7 @@ const GettingStartedPage: NextPageWithLayout = () => {
             console.log('new guesses', guesses);
 
             setRightGuesses(guesses);
+            setGuess([]); // reset
           }
         }
       }
@@ -244,7 +227,8 @@ const GettingStartedPage: NextPageWithLayout = () => {
     console.log('hist', hist);
     if (hist && hist.length > 0) {
       let url = 'https://testnet3.aleorpc.com';
-      const tx = await getTransaction(url, hist[hist.length - 1].transactionId);
+      // the first tx is always the solution tx
+      const tx = await getTransaction(url, hist[0].transactionId);
       console.log('hist tx', tx);
       if (tx?.execution?.transitions && tx?.execution?.transitions.length > 0) {
         const outputs = tx.execution.transitions[0].outputs;
@@ -275,6 +259,7 @@ const GettingStartedPage: NextPageWithLayout = () => {
           console.log('solution done', sol);
 
           setSolution(sol);
+          setStatusText('');
         }
       }
     }
@@ -321,11 +306,8 @@ const GettingStartedPage: NextPageWithLayout = () => {
                 onGuess(index);
               }}
             >
-              {guess?.includes(index) || rightGuesses?.includes(index) ? (
-                <div>{guess?.includes(index) ? '_' : ''}</div>
-              ) : (
-                ''
-              )}
+              {guess?.includes(index) && <div>GUESSED</div>}
+              {rightGuesses?.includes(index) && <div>SOLVED</div>}
             </div>
           ))}
         </div>
