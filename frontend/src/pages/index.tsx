@@ -11,20 +11,14 @@ import {
   WalletAdapterNetwork,
   WalletNotConnectedError,
 } from '@demox-labs/aleo-wallet-adapter-base';
-import { calculateHash } from '../lib/hashing';
 
-export const programId = 'zkmemorygamev6.aleo';
+export const programId = 'zkmemorygamev7.aleo';
 
 const GettingStartedPage: NextPageWithLayout = () => {
-  const {
-    wallet,
-    publicKey,
-    requestTransactionHistory,
-    requestRecordPlaintexts,
-  } = useWallet();
+  const { wallet, publicKey } = useWallet();
 
   const fee = 2000;
-  const puzzleSize = 4;
+  const puzzleSize = 8;
   const puzzle = Array.from({ length: puzzleSize }, () => 0);
 
   let [transactionId, setTransactionId] = useState<string | undefined>();
@@ -55,7 +49,8 @@ const GettingStartedPage: NextPageWithLayout = () => {
           console.error('get solution first');
           return;
         }
-
+        setStatusText('');
+        setStatus('');
         setGuess([index, guess[0]]);
         setGuessTxProcessing(true);
 
@@ -64,6 +59,8 @@ const GettingStartedPage: NextPageWithLayout = () => {
         const hashes = [
           solution.solHashes[0].replace('.public', ''),
           solution.solHashes[1].replace('.public', ''),
+          solution.solHashes[2].replace('.public', ''),
+          solution.solHashes[3].replace('.public', ''),
         ];
         const aleoFormatted = JSON.stringify(hashes)
           .replaceAll("'", '')
@@ -104,10 +101,6 @@ const GettingStartedPage: NextPageWithLayout = () => {
   };
 
   useEffect(() => {
-    //console.log('guess is now', guess?.join(' '));
-  }, [guess]);
-
-  useEffect(() => {
     let intervalId: NodeJS.Timeout | undefined;
 
     if (transactionId) {
@@ -124,8 +117,8 @@ const GettingStartedPage: NextPageWithLayout = () => {
   }, [transactionId]);
 
   useEffect(() => {
-    const hmm = async () => {
-      console.log('new status', status);
+    const updateState = async () => {
+      //console.log('new status', status);
       if (status == 'Completed') {
         if (solTxProcessing) {
           setSolTxProcessing(false);
@@ -134,9 +127,11 @@ const GettingStartedPage: NextPageWithLayout = () => {
           setGuessTxProcessing(false);
         }
         //setTransactionId(undefined);
+      } else if (status) {
+        setGuessTxProcessing(true);
       }
     };
-    hmm();
+    updateState();
   }, [status, transactionId]);
 
   const getGuessResult = async () => {
@@ -148,13 +143,12 @@ const GettingStartedPage: NextPageWithLayout = () => {
     if (hist && hist.length > 0) {
       let url = 'https://testnet3.aleorpc.com';
       const tx = await getTransaction(url, hist[hist.length - 1].transactionId);
-      console.log('hist tx', tx);
+      //console.log('hist tx', tx);
       if (tx?.execution?.transitions && tx?.execution?.transitions.length > 0) {
         const outputs = tx.execution.transitions[0].outputs;
-        console.log('outputs', outputs);
+        // console.log('outputs', outputs);
         if (outputs?.length > 0) {
           const val = outputs[0].value;
-          console.log('val2', val);
 
           const decrypted = await adapter.decrypt(val);
           console.log('decrypted guess', decrypted);
@@ -179,16 +173,19 @@ const GettingStartedPage: NextPageWithLayout = () => {
 
             const res = JSON.parse(decrypted.replace(r, f)) as GuessResult;
 
-            console.log('success! previous guess', res.guess);
+            //console.log('success! previous guess', res.guess);
             const guess1 = +res.guess.c1.replace('u8.public', '');
             const guess2 = +res.guess.c2.replace('u8.public', '');
 
             let guesses = rightGuesses;
             guesses = (guesses || []).concat([guess1, guess2]).sort();
 
-            console.log('new guesses', guesses);
+            //console.log('new guesses', guesses);
 
             setRightGuesses(guesses);
+            setGuess([]); // reset
+          } else {
+            setStatusText('Previous guess was incorrect');
             setGuess([]); // reset
           }
         }
@@ -196,6 +193,7 @@ const GettingStartedPage: NextPageWithLayout = () => {
     }
   };
 
+  // Only needed once when the program is deployed
   const startSolGet = async () => {
     if (!publicKey) throw new WalletNotConnectedError();
 
@@ -229,10 +227,10 @@ const GettingStartedPage: NextPageWithLayout = () => {
       let url = 'https://testnet3.aleorpc.com';
       // the first tx is always the solution tx
       const tx = await getTransaction(url, hist[0].transactionId);
-      console.log('hist tx', tx);
+      //console.log('hist tx', tx);
       if (tx?.execution?.transitions && tx?.execution?.transitions.length > 0) {
         const outputs = tx.execution.transitions[0].outputs;
-        console.log('outputs', outputs);
+        // console.log('outputs', outputs);
         if (outputs?.length > 0) {
           const val = outputs[0].value;
           console.log('sol val', val);
@@ -314,12 +312,12 @@ const GettingStartedPage: NextPageWithLayout = () => {
         <Button onClick={startSolGet} disabled={disabled}>
           set sol
         </Button>
-        <Button onClick={getSolution} disabled={disabled}>
-          retrieve sol
+        <Button onClick={getSolution} disabled={disabled || !!solution}>
+          Retrieve ciphertext solution
         </Button>
 
         <Button onClick={getGuessResult} disabled={disabled}>
-          guess result
+          Verify previous guess result
         </Button>
         {transactionId && (
           <div>
