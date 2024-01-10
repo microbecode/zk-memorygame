@@ -1,4 +1,4 @@
-import type { NextPageWithLayout, Solution } from '@/types';
+import type { GuessResult, NextPageWithLayout, Solution } from '@/types';
 import { NextSeo } from 'next-seo';
 import DashboardLayout from '@/layouts/dashboard/_dashboard';
 import Button from '@/components/ui/button';
@@ -11,8 +11,9 @@ import {
   WalletAdapterNetwork,
   WalletNotConnectedError,
 } from '@demox-labs/aleo-wallet-adapter-base';
+import { calculateHash } from '../lib/hashing';
 
-export const programId = 'zkmemorygame234.aleo';
+export const programId = 'zkmemorygamev6.aleo';
 
 const GettingStartedPage: NextPageWithLayout = () => {
   const {
@@ -22,21 +23,34 @@ const GettingStartedPage: NextPageWithLayout = () => {
     requestRecordPlaintexts,
   } = useWallet();
 
-  const functionName = 'new';
   const fee = 2000;
   const puzzleSize = 4;
+  const puzzle = Array.from({ length: puzzleSize }, () => 0);
 
   let [transactionId, setTransactionId] = useState<string | undefined>();
   let [status, setStatus] = useState<string | undefined>();
-  let [puzzle, setPuzzle] = useState<number[]>(
-    Array.from({ length: puzzleSize }, () => 0)
-  );
+
   let [guess, setGuess] = useState<number[]>();
-  let [solution, setSolution] = useState<Solution>();
+  let [rightGuesses, setRightGuesses] = useState<number[]>();
+  let [solution, setSolution] =
+    useState<Solution>(/* {
+    owner: '',
+    _nonce: '',
+    solHashes: [
+      '2797802722306951261185173939919875632932683148513324805941125501600765440890field.public',
+      '2759852216709657892218420375572265609425999351118643956003570932661481028716field.public',
+    ],
+  } */);
+  let [solTxProcessing, setSolTxProcessing] = useState<boolean>(false);
+  let [solGuessProcessing, setGuessTxProcessing] = useState<boolean>(false);
+  let [statusText, setStatusText] = useState<string>('');
 
-  console.log('puzzle', puzzle);
+  const disabled = solTxProcessing || solGuessProcessing;
 
-  const onGuess = (index: number) => {
+  const onGuess = async (index: number) => {
+    if (disabled) {
+      return;
+    }
     console.log('guess', index);
     if (guess && guess.length > 0) {
       if (index == guess[0]) {
@@ -44,6 +58,63 @@ const GettingStartedPage: NextPageWithLayout = () => {
         setGuess(new Array());
       } else {
         // finalize
+
+        if (!solution) {
+          console.error('get solution first');
+          return;
+        }
+
+        setGuess([index, guess[0]]);
+
+        setGuessTxProcessing(true);
+
+        if (!publicKey) throw new WalletNotConnectedError();
+
+        //  console.log('TIS IS', solution.solHashes[0], solution.solHashes[1]);
+
+        const hashes = [
+          solution.solHashes[0].replace('.public', ''),
+          solution.solHashes[1].replace('.public', ''),
+        ];
+        const aleoFormatted = JSON.stringify(hashes)
+          .replaceAll("'", '')
+          .replaceAll('"', '');
+
+        console.log('wront hshes', aleoFormatted);
+
+        const hashes5 =
+          '[2797802722306951261185173939919875632932683148513324805941125501600765440890field,2759852216709657892218420375572265609425999351118643956003570932661481028716field]';
+
+        // const parsedInputs: any[] = [hashes5, '1u8', '3u8'];
+
+        let parsedInputs: any[] = [aleoFormatted];
+
+        if (index < guess[0]) {
+          parsedInputs.push(index + 'u8');
+          parsedInputs.push(guess[0] + 'u8');
+        } else {
+          parsedInputs.push(guess[0] + 'u8');
+          parsedInputs.push(index + 'u8');
+        }
+
+        const aleoTransaction = Transaction.createTransaction(
+          publicKey,
+          WalletAdapterNetwork.Testnet,
+          programId,
+          'guess',
+          parsedInputs,
+          fee!,
+          false
+        );
+        console.log('guess tx', aleoTransaction);
+
+        const txId =
+          (await (wallet?.adapter as LeoWalletAdapter).requestTransaction(
+            aleoTransaction
+          )) || '';
+
+        console.log('guess txId', txId);
+        setTransactionId(txId);
       }
       return;
     }
@@ -51,7 +122,7 @@ const GettingStartedPage: NextPageWithLayout = () => {
   };
 
   useEffect(() => {
-    console.log('guess is now', guess?.join(' '));
+    //console.log('guess is now', guess?.join(' '));
   }, [guess]);
 
   useEffect(() => {
@@ -73,57 +144,22 @@ const GettingStartedPage: NextPageWithLayout = () => {
   useEffect(() => {
     const hmm = async () => {
       console.log('new status', status);
-      /*   if (status == 'Finalized') {
-        const records = await (
-          wallet?.adapter as LeoWalletAdapter
-        ).requestRecords(transactionId!);
-        console.log('result', records);
-      } */
-      /* const a = await (
-        wallet?.adapter as LeoWalletAdapter
-      ). */
+      if (status == 'Completed') {
+        if (solTxProcessing) {
+          setSolTxProcessing(false);
+        }
+        if (solGuessProcessing) {
+          setGuessTxProcessing(false);
+        }
+        //setTransactionId(undefined);
+      }
     };
     hmm();
   }, [status, transactionId]);
 
-  function tryParseJSON(input: string): string | object {
-    try {
-      return JSON.parse(input);
-    } catch (error) {
-      return input;
-    }
-  }
-
-  const handleSubmit = async (event: any) => {
-    event.preventDefault();
+  const getGuessResult = async () => {
     if (!publicKey) throw new WalletNotConnectedError();
 
-    const inputs = '';
-    const inputsArray = inputs.split('\n').filter((input) => input !== '');
-    const parsedInputs = inputsArray.map((input) => tryParseJSON(input));
-
-    const aleoTransaction = Transaction.createTransaction(
-      publicKey,
-      WalletAdapterNetwork.Testnet,
-      programId,
-      functionName,
-      parsedInputs,
-      fee!,
-      false
-    );
-
-    console.log('tx', aleoTransaction);
-
-    const txId =
-      (await (wallet?.adapter as LeoWalletAdapter).requestTransaction(
-        aleoTransaction
-      )) || '';
-
-    console.log('txId', txId);
-    setTransactionId(txId);
-  };
-
-  const getHistory = async () => {
     const adapter = wallet?.adapter as LeoWalletAdapter;
     const hist = await adapter.requestTransactionHistory(programId);
     console.log('hist', hist);
@@ -136,7 +172,86 @@ const GettingStartedPage: NextPageWithLayout = () => {
         console.log('outputs', outputs);
         if (outputs?.length > 0) {
           const val = outputs[0].value;
-          console.log('val', val);
+          console.log('val2', val);
+
+          const decrypted = await adapter.decrypt(val);
+          console.log('decrypted guess', decrypted);
+
+          if (decrypted.includes('true.public')) {
+            /* This is the kind of data we get back from the adapter.
+          {
+            owner: aleo16xfyc9065arfx97cuh7kh0sh53s65lkcaz6j38zfd38amny5g59qvm2uyl.public,
+            guess: {
+              c1: 1u8.public,
+              c2: 3u8.public
+            },
+            result: true.public,
+            _nonce: 2619437828091549899575885071043022308495846112965135261351769394063864954536group.public
+          }
+          */
+            // Thanks AI for the parsing.
+            const r = /'([^']*)'|(\w+):|(\w+\.public)/g;
+            // A function to replace the matches with double quotes and quoted property names
+            const f = (_: any, p1: any, p2: any, p3: any) =>
+              p1 ? `"${p1}"` : p2 ? `"${p2}":` : `"${p3}"`;
+
+            const res = JSON.parse(decrypted.replace(r, f)) as GuessResult;
+
+            console.log('success! previous guess', res.guess);
+            const guess1 = +res.guess.c1.replace('u8.public', '');
+            const guess2 = +res.guess.c2.replace('u8.public', '');
+
+            let guesses = rightGuesses;
+            guesses = (guesses || []).concat([guess1, guess2]).sort();
+
+            console.log('new guesses', guesses);
+
+            setRightGuesses(guesses);
+          }
+        }
+      }
+    }
+  };
+
+  const startSolGet = async () => {
+    if (!publicKey) throw new WalletNotConnectedError();
+
+    const aleoTransaction = Transaction.createTransaction(
+      publicKey,
+      WalletAdapterNetwork.Testnet,
+      programId,
+      'new',
+      [],
+      fee!,
+      false
+    );
+
+    console.log('tx', aleoTransaction);
+    setSolTxProcessing(true);
+
+    const txId =
+      (await (wallet?.adapter as LeoWalletAdapter).requestTransaction(
+        aleoTransaction
+      )) || '';
+
+    console.log('txId', txId);
+    setTransactionId(txId);
+  };
+
+  const getSolution = async () => {
+    const adapter = wallet?.adapter as LeoWalletAdapter;
+    const hist = await adapter.requestTransactionHistory(programId);
+    console.log('hist', hist);
+    if (hist && hist.length > 0) {
+      let url = 'https://testnet3.aleorpc.com';
+      const tx = await getTransaction(url, hist[hist.length - 1].transactionId);
+      console.log('hist tx', tx);
+      if (tx?.execution?.transitions && tx?.execution?.transitions.length > 0) {
+        const outputs = tx.execution.transitions[0].outputs;
+        console.log('outputs', outputs);
+        if (outputs?.length > 0) {
+          const val = outputs[0].value;
+          console.log('sol val', val);
           const decrypted = await adapter.decrypt(val);
 
           /* This is the kind of data we get back from the adapter.
@@ -156,26 +271,13 @@ const GettingStartedPage: NextPageWithLayout = () => {
           const f = (_: any, p1: any, p2: any, p3: any) =>
             p1 ? `"${p1}"` : p2 ? `"${p2}":` : `"${p3}"`;
 
-          setSolution(JSON.parse(decrypted.replace(r, f)) as Solution);
+          const sol = JSON.parse(decrypted.replace(r, f)) as Solution;
+          console.log('solution done', sol);
+
+          setSolution(sol);
         }
       }
     }
-    //const aaa = await (wallet?.adapter as LeoWalletAdapter).requestRecordPlaintexts
-    /*    if (requestRecordPlaintexts) {
-      const aaa = await requestRecordPlaintexts(programId);
-      console.log('aaa', aaa);
-    } */
-
-    /*  if (requestTransactionHistory) {
-      const hist = await requestTransactionHistory(programId);
-      console.log('hist', hist);
-    }*/
-    /*  if (transactionId) {
-      let url = 'https://testnet3.aleorpc.com';
-      const tx = await getTransaction(url, transactionId);
-      console.log('tx', tx);
-      console.log('outputp', tx.output);
-    } */
   };
 
   async function getTransaction(
@@ -185,10 +287,15 @@ const GettingStartedPage: NextPageWithLayout = () => {
     const transactionUrl = `${apiUrl}/aleo/transaction`;
     const response = await fetch(`${transactionUrl}/${transactionId}`);
     if (!response.ok) {
-      throw new Error('Transaction not found');
+      //throw new Error('Transaction not found');
+      setStatusText(
+        'Transaction not found. Please wait about a minute for the tx to be indexed.'
+      );
+    } else {
+      setStatusText('');
+      const transaction = await response.json();
+      return transaction;
     }
-    const transaction = await response.json();
-    return transaction;
   }
 
   const getTransactionStatus = async (txId: string) => {
@@ -214,27 +321,30 @@ const GettingStartedPage: NextPageWithLayout = () => {
                 onGuess(index);
               }}
             >
-              {guess?.includes(index) ? <div>_</div> : ''}
+              {guess?.includes(index) || rightGuesses?.includes(index) ? (
+                <div>{guess?.includes(index) ? '_' : ''}</div>
+              ) : (
+                ''
+              )}
             </div>
           ))}
         </div>
-        <div className="flex items-center justify-center">
-          <Button
-            disabled={
-              !publicKey || !programId || !functionName || fee === undefined
-            }
-            onClick={handleSubmit}
-            className="shadow-card dark:bg-gray-700 md:h-10 md:px-5 xl:h-12 xl:px-7"
-          >
-            {!publicKey ? 'Connect Your Wallet' : 'Submit'}
-          </Button>
-        </div>
-        <Button onClick={getHistory}>hist</Button>
+        <Button onClick={startSolGet} disabled={disabled}>
+          set sol
+        </Button>
+        <Button onClick={getSolution} disabled={disabled}>
+          retrieve sol
+        </Button>
+
+        <Button onClick={getGuessResult} disabled={disabled}>
+          guess result
+        </Button>
         {transactionId && (
           <div>
-            <div>{`Transaction status: ${status}`}</div>
+            <div>{`Please wait for the transaction to be completed. Transaction status: ${status}`}</div>
           </div>
         )}
+        {statusText && <div>{statusText}</div>}
       </Base>
     </>
   );

@@ -5,12 +5,18 @@ program zkmemorygame.aleo {
         public solHashes: [field; 2]
     }
 
+    record GuessResult {
+        public owner: address,
+        public guess: Pair,
+        public result: bool
+    }
+
     struct Pair {
         c1: u8,
         c2: u8
     }
 
-    transition guess(hashes: [field; 2], public a: u8, public b: u8) -> bool {
+    transition guess(public hashes: [field; 2], public a: u8, public b: u8) -> GuessResult {
         let pair: Pair = Pair {
             c1: a,
             c2: b
@@ -21,19 +27,33 @@ program zkmemorygame.aleo {
         let solB : field = hashes[1_u8];
 
         if (suggestedSol == solA || suggestedSol == solB) {
-            return true;
+            return GuessResult {
+                owner: self.caller,
+                guess: Pair {
+                    c1: a,
+                    c2: b
+                },
+                result: true
+            };
         }
-        return false;
+        return GuessResult {
+            owner: self.caller,
+            guess: Pair {
+                c1: a,
+                c2: b
+            },
+            result: false
+        };
     }
 
     transition new() -> Solution {
         let pair1: Pair = Pair {
-            c1: 1_u8,
-            c2: 3_u8
+            c1: 0_u8,
+            c2: 2_u8
         };
         let pair2: Pair = Pair {
-            c1: 2_u8,
-            c2: 4_u8
+            c1: 1_u8,
+            c2: 3_u8
         };
         let sol1: field = Poseidon4::hash_to_field(pair1);
         let sol2: field = Poseidon4::hash_to_field(pair2);
@@ -42,4 +62,12 @@ program zkmemorygame.aleo {
             solHashes: [sol1, sol2]
         };
     }
+
+/*     transition t() -> field {
+        let pair: Pair = Pair {
+            c1: 1_u8,
+            c2: 3_u8
+        };
+        return Poseidon4::hash_to_field(pair);
+    } */
 }

@@ -17,3 +17,10 @@ export interface Solution {
   solHashes: string[];
   _nonce: string;
 }
+
+export interface GuessResult {
+  owner: string;
+  result: boolean;
+  guess: { c1: string; c2: string };
+  _nonce: string;
+}
