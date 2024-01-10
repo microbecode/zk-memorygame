@@ -1,49 +1,31 @@
-# Leo Wallet Demo
+# ZK memory game
 
-This is a NextJS-based demo site for the [Aleo Wallet Adapter](https://github.com/demox-labs/aleo-wallet-adapter) to be used on the [Aleo blockchain](https://aleo.org). <br>
+This is a simple memory game designed to demonstrate the power of Aleo, a Layer 1 ZK blockchain.
 
-The goal of this demo is to show how to build a website that integrates with Aleo Wallets like the [Leo Wallet](https://leo.app)
+## Rules
 
+The games has 8 unrevealed cards. The player must guess which ones form pairs.
 
-<hr />
+Once a pair is found, it's left opened on the table. If your guess does not result in a pair that is the only information you find out - you are not revealed any extra information.
 
-## Demo 
+## How to play
 
-You can find [this site live here](https://demo.leo.app)
+1. Make sure you have some Aleo testnet3 tokens
+1. Connect your Leo wallet
+1. Retrieve the ciphertext solution by clicking the corresponding button. This should be a fast operation
+1. Start guessing by clicking two cards. Once you click the second card a transaction is started. Picked cards are in state "GUESSED"
+1. Wait for the transaction to process in a separate tab. This may take a few minutes
+1. Once the transaction is completed, click the "Verify previous guess result" button. This will retrieve the result of the previous guess. If you found a pair, the cards will be left in state "SOLVED". If you didn't find a pair, the guess is reset and a text is shown.
+1. Continue until all pairs have been found
 
-## 🚀 Quick Start
+## Deployment
 
-Ensure you have:
+The website is deployed at https://zk-memorygame.vercel.app/ .
 
-- [Node.js](https://nodejs.org) 12 or later installed
-- [Yarn](https://yarnpkg.com) v1 or v2 installed
+## Limitations
 
-Then run the following:
+The game is not production ready. There are certain limitations and known bugs. Namely:
 
-### 1) Clone the repository
-
-```bash
-git clone https://github.com/demox-labs/leo-wallet-demo && cd leo-wallet-demo
-```
-
-### 2) Install dependencies
-
-```bash
-yarn
-```
-
-### 3) Development
-
-Run a local server on localhost:3000.
-
-```bash
-yarn dev
-```
-
-
-
-### 4) Build
-
-```bash
-yarn build
-```
+- The game solution is the same every time you play
+- Only one player can play the game at any one time due to restrictions on utilizing the on-chain program
+- The project does not utilize Aleo record's full privacy because there's no way to share only part of a record (solution). Hashing is utilized instead. Therefore, the exact solution is also visible in the Aleo program itself

@@ -309,9 +309,9 @@ const GettingStartedPage: NextPageWithLayout = () => {
             </div>
           ))}
         </div>
-        <Button onClick={startSolGet} disabled={disabled}>
+        {/*         <Button onClick={startSolGet} disabled={disabled}>
           set sol
-        </Button>
+        </Button> */}
         <Button onClick={getSolution} disabled={disabled || !!solution}>
           Retrieve ciphertext solution
         </Button>
