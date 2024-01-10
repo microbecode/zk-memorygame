@@ -151,7 +151,7 @@ const GettingStartedPage: NextPageWithLayout = () => {
           const val = outputs[0].value;
 
           const decrypted = await adapter.decrypt(val);
-          console.log('decrypted guess', decrypted);
+          //console.log('decrypted guess', decrypted);
 
           if (decrypted.includes('true.public')) {
             /* This is the kind of data we get back from the adapter.
