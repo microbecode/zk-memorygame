@@ -119,7 +119,7 @@ const GettingStartedPage: NextPageWithLayout = () => {
   useEffect(() => {
     const updateState = async () => {
       //console.log('new status', status);
-      if (status == 'Completed') {
+      if (status == 'Completed' || status == 'Finalized') {
         if (solTxProcessing) {
           setSolTxProcessing(false);
         }
@@ -268,16 +268,24 @@ const GettingStartedPage: NextPageWithLayout = () => {
     transactionId: string
   ): Promise<any> {
     const transactionUrl = `${apiUrl}/aleo/transaction`;
-    const response = await fetch(`${transactionUrl}/${transactionId}`);
-    if (!response.ok) {
-      //throw new Error('Transaction not found');
+
+    let response: Response;
+    try {
+      response = await fetch(`${transactionUrl}/${transactionId}`);
+      if (response && !response.ok) {
+        //throw new Error('Transaction not found');
+        setStatusText(
+          'Transaction not found. Please wait about a minute for the tx to be indexed.'
+        );
+      } else {
+        setStatusText('');
+        const transaction = await response.json();
+        return transaction;
+      }
+    } catch (_) {
       setStatusText(
         'Transaction not found. Please wait about a minute for the tx to be indexed.'
       );
-    } else {
-      setStatusText('');
-      const transaction = await response.json();
-      return transaction;
     }
   }
 
@@ -305,7 +313,9 @@ const GettingStartedPage: NextPageWithLayout = () => {
               }}
             >
               {guess?.includes(index) && <div>GUESSED</div>}
-              {rightGuesses?.includes(index) && <div>SOLVED</div>}
+              {rightGuesses?.includes(index) && (
+                <div style={{ backgroundColor: 'green' }}>SOLVED</div>
+              )}
             </div>
           ))}
         </div>

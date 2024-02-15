@@ -13,7 +13,7 @@ Once a pair is found it's left opened on the table. If your guess does not resul
 1. Make sure you have some Aleo testnet3 tokens
 1. Connect your Leo wallet
 1. Retrieve the ciphertext solution by clicking the corresponding button. This should be a fast operation
-1. Start guessing by clicking two cards. Once you click the second card a transaction is started. Picked cards are in state "GUESSED"
+1. Start guessing by clicking two cards. Once you click the second card a transaction is started and presented for you to confirm. Picked cards are in state "GUESSED"
 1. Wait for the transaction to process in a separate tab. This may take a few minutes
 1. Once the transaction is completed, wait for the transaction to get indexed. This takes about a minute.
 1. Click the "Verify previous guess result" button. You will get an error text if the transaction hasn't been indexed yet. Otherwise this will retrieve the result of the previous guess. If you found a pair, the cards will be left in state "SOLVED". If you didn't find a pair, the guess is reset and a text is shown.
