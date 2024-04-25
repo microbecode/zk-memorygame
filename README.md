@@ -2,6 +2,8 @@
 
 This is a simple memory game designed to demonstrate the power of Aleo, a Layer 1 ZK blockchain.
 
+NOTE: After implementation the Aleo network has undergone some changes. This project's history retrieval no longer works properly, so you can't retrieve the previous moves from the network. This makes the game unplayable.
+
 ## Rules
 
 The games has 8 unrevealed cards. The player must guess which ones form pairs and remember which have been guessed already.
